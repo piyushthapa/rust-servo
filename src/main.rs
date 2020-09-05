@@ -1,3 +1,10 @@
+use http::Request;
+use server::Server;
+
+mod http;
+mod server;
+
 fn main() {
-    println!("Hello, world!");
+    let server = Server::new("localhost:4100");
+    server.run();
 }
