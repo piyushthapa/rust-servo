@@ -4,19 +4,19 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult, Debug};
 use std::str;
 use std::str::Utf8Error;
+use crate::http::QueryString;
 
-pub struct Request {
-    path: String,
-    query_string: String,
-    method: Option<Method>,
+#[derive(Debug)]
+pub struct Request<'a> {
+    path: &'a str,
+    query_string: Option<QueryString<'a>>,
+    method: Method,
 }
 
-
-
-impl TryFrom<&[u8]> for Request {
+impl <'a> TryFrom<&'a [u8]> for Request <'a> {
     type Error = RequestError;
 
-    fn try_from(buff: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(buff: &'a [u8]) -> Result<Request<'a>, Self::Error> {
         // TODO:  parse Request 
         // GET /some_path HTTP/1.1\r\n...SOME_HEADERS...
 
@@ -30,7 +30,18 @@ impl TryFrom<&[u8]> for Request {
         }
 
         let method: Method = method.parse()?;
-        unimplemented!()
+
+        let mut query_string = None;
+        if let Some((q, _)) = fetch_next_word(path, '?') {
+            query_string = Some(QueryString::from(q));
+        }
+        
+        Ok( Request{
+            path,
+            query_string,
+            method
+        })
+        
     }
 }
 
@@ -46,7 +57,6 @@ fn fetch_next_word(request: &str, pattern: char) -> Option<(&str, &str)>{
 
 pub enum RequestError {
     InvalidMethod,
-    InvalidPath,
     InvalidEncodding, 
     InvalidProtocol,
     InvalidRequest,
@@ -56,7 +66,6 @@ impl RequestError {
     fn get_msg(&self) -> &str {
         match self {
             RequestError::InvalidEncodding => "Invalid Encoding",
-            RequestError::InvalidPath => "Invalid Path",
             RequestError::InvalidMethod => "Invalid Method",
             RequestError::InvalidProtocol => "Invalid Protocol",
             RequestError::InvalidRequest => "Invalid Request",

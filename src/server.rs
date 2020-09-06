@@ -26,7 +26,7 @@ impl Server {
                         Ok(_) => {
                             match Request::try_from(&bytes[..]) {
                                 Ok(request) => {
-                                    
+                                    dbg!("{}", request);
                                 },
                                 Err(e) => {
                                     println!("[Error: ]  {}", e)
